@@ -1,0 +1,49 @@
+package cn.itcast.core.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import cn.itcast.common.page.Pagination;
+import cn.itcast.core.bean.product.Brand;
+import cn.itcast.core.service.product.BrandService;
+
+@Controller
+public class BrandController {
+
+	@Autowired
+	private BrandService brandService;
+
+	@RequestMapping(value = "/brand/list.do")
+	public String index(String name, Integer isDisplay, Integer pageNo, Model model) {
+		Pagination pagination = brandService.selectPaginationByBrandQuery(name, isDisplay, pageNo);
+
+		StringBuilder param = new StringBuilder();
+
+		// 回显
+		if (null != name) {
+			model.addAttribute("name", name);
+			param.append("name=" + name);
+		}
+		if (null != isDisplay) {
+			model.addAttribute("isDisplay", isDisplay);
+			param.append("isDisplay=" + isDisplay);
+		} else {
+			model.addAttribute("isDisplay", 1);
+			param.append("isDisplay=" + 1);
+		}
+
+		pagination.pageView("/brand/list.do", param.toString());
+		model.addAttribute("pagination", pagination);
+		return "brand/list";
+	}
+
+	@RequestMapping(value = "/brand/toEdit.do")
+	public String index(Long id, Model model) {
+		Brand brand = brandService.selectBrandById(id);
+		model.addAttribute("brand", brand);
+		return "/brand/edit";
+
+	}
+}

@@ -1,0 +1,93 @@
+package cn.itcast.core.service.product;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.itcast.common.web.Constants;
+import cn.itcast.core.bean.BuyerCart;
+import cn.itcast.core.bean.BuyerItem;
+import cn.itcast.core.bean.product.Sku;
+import cn.itcast.core.bean.product.SkuQuery;
+import cn.itcast.core.dao.product.ColorDao;
+import cn.itcast.core.dao.product.ProductDao;
+import cn.itcast.core.dao.product.SkuDao;
+import redis.clients.jedis.Jedis;
+
+@Service("skuService")
+@Transactional
+public class SkuServiceImpl implements SkuService {
+
+	@Autowired
+	private SkuDao skuDao;
+	@Autowired
+	private ColorDao colorDao;
+
+	// 遍历商品
+	public List<Sku> selectSkuListByProductId(Long productId) {
+		SkuQuery skuQuery = new SkuQuery();
+		skuQuery.createCriteria().andProductIdEqualTo(productId);
+		List<Sku> skus = skuDao.selectByExample(skuQuery);
+		for (Sku sku : skus) {
+			// 3条Sql 一级缓存
+			sku.setColor(colorDao.selectByPrimaryKey(sku.getColorId()));
+		}
+		return skus;
+
+	}
+
+	// 保存修改
+	public void updateSkuById(Sku sku) {
+		skuDao.updateByPrimaryKeySelective(sku);
+	}
+
+	@Autowired
+	private ProductDao productDao;
+
+	// 根据skuId查询sku对象
+	public Sku selectSkuById(Long skuId) {
+		Sku sku = skuDao.selectByPrimaryKey(skuId);
+		sku.setColor(colorDao.selectByPrimaryKey(sku.getColorId()));
+		sku.setProduct(productDao.selectByPrimaryKey(sku.getProductId()));
+		return sku;
+	}
+
+	@Autowired
+	private Jedis jedis;
+
+	// 存购物车到redis中 保存商品到redis
+	public void insertBuyerCartToRedis(BuyerCart buyerCart, String username) {
+		List<BuyerItem> items = buyerCart.getItems();
+		if (items.size() > 0) {
+			for (BuyerItem item : items) {
+				jedis.hset(Constants.BUYER_CAR + username, String.valueOf(item.getSku().getId()),
+						String.valueOf(item.getAmount()));
+			}
+		}
+	}
+
+	// 从redis中取出购物车
+	public BuyerCart selectCartFromRedisByCartName(String username) {
+		BuyerCart buyerCart = new BuyerCart();
+		List<BuyerItem> items = new ArrayList<BuyerItem>();
+		Map<String, String> hgetAll = jedis.hgetAll(Constants.BUYER_CAR + username);
+		// 判断是否存在购物车
+		if (hgetAll.size() > 0) {
+			Set<Entry<String, String>> entrySet = hgetAll.entrySet();
+			BuyerItem item = new BuyerItem();
+			for (Entry<String, String> entry : entrySet) {
+				item.setSku(skuDao.selectByPrimaryKey(Long.parseLong(entry.getKey())));
+				item.setAmount(Integer.valueOf(entry.getValue()));
+				items.add(item);
+			}
+			buyerCart.setItems(items);
+		}
+		return buyerCart;
+	}
+}

@@ -1,0 +1,7 @@
+package cn.itcast.core.service.product;
+
+import cn.itcast.common.page.Pagination;
+
+public interface BrandService {
+	public Pagination selectPaginationByBrandQuery(String name, Integer isDisplay, Integer pageNo);
+}

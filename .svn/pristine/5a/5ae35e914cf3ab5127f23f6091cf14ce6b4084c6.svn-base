@@ -1,0 +1,38 @@
+package cn.itcast.core.bean;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 购物车对象
+ * 
+ * @author LL
+ *
+ */
+public class BuyerCart implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	// 购物项结果集 list<BuyerItem>
+	private List<BuyerItem> items = new ArrayList<BuyerItem>();
+
+	// 商品
+	// 小计 价格
+
+	// 添加商品
+	public void addBuyerItem(BuyerItem buyerItem) {
+		items.add(buyerItem);
+	}
+
+	public List<BuyerItem> getItems() {
+		return items;
+	}
+
+	public void setItems(List<BuyerItem> items) {
+		this.items = items;
+	}
+
+}

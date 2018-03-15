@@ -1,0 +1,23 @@
+package cn.itcast.core.service.product;
+
+import java.util.List;
+
+import cn.itcast.core.bean.BuyerCart;
+import cn.itcast.core.bean.product.Sku;
+
+public interface SkuService {
+	// 遍历商品
+	public List<Sku> selectSkuListByProductId(Long productId);
+
+	// 保存修改
+	public void updateSkuById(Sku sku);
+
+	// 根据skuId查询sku对象
+	public Sku selectSkuById(Long skuId);
+
+	// 存购物车到redis中 保存商品到redis
+	public void insertBuyerCartToRedis(BuyerCart buyerCart, String username);
+
+	// 从redis中取出购物车
+	public BuyerCart selectCartFromRedisByCartName(String username);
+}

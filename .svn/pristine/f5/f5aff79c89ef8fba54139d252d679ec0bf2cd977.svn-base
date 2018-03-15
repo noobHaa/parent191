@@ -1,0 +1,13 @@
+package cn.itcast.core.service.product;
+
+import java.util.List;
+
+import cn.itcast.common.page.Pagination;
+import cn.itcast.core.bean.product.Color;
+
+public interface ProductService {
+	public Pagination selectPaginationByProductQuery(String name, Long brandId, Integer pageNo, Boolean isShow);
+
+	// 遍历颜色
+	public List<Color> selectColor();
+}

@@ -1,0 +1,41 @@
+package cn.itcast.core.service.product;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import cn.itcast.core.bean.product.Sku;
+import cn.itcast.core.bean.product.SkuQuery;
+import cn.itcast.core.dao.product.ColorDao;
+import cn.itcast.core.dao.product.SkuDao;
+
+@Service("skuService")
+@Transactional
+public class SkuServiceImpl implements SkuService {
+
+	@Autowired
+	private SkuDao skuDao;
+	@Autowired
+	private ColorDao colorDao;
+
+	// 遍历商品
+	public List<Sku> selectSkuListByProductId(Long productId) {
+		SkuQuery skuQuery = new SkuQuery();
+		skuQuery.createCriteria().andProductIdEqualTo(productId);
+		List<Sku> skus = skuDao.selectByExample(skuQuery);
+		 for (Sku sku : skus) {
+			// 3条Sql  一级缓存 
+			sku.setColor(colorDao.selectByPrimaryKey(sku.getColorId()));
+		}
+		return skus;
+
+	}
+
+	// 保存修改
+	public void updateSkuById(Sku sku) {
+		skuDao.updateByPrimaryKeySelective(sku);
+	}
+
+}
